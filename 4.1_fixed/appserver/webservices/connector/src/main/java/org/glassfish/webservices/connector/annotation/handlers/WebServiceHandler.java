@@ -54,6 +54,7 @@ import org.glassfish.apf.impl.HandlerProcessingResultImpl;
 import com.sun.enterprise.deployment.annotation.context.WebBundleContext;
 import com.sun.enterprise.deployment.annotation.context.WebComponentContext;
 import com.sun.enterprise.deployment.annotation.context.EjbContext;
+import com.sun.enterprise.deployment.annotation.context.EjbsContext;
 
 import com.sun.enterprise.deployment.*;
 import com.sun.enterprise.deployment.util.DOLUtils;
