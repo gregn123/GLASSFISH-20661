@@ -1,0 +1,53 @@
+--- 4.1/appserver/webservices/connector/src/main/java/org/glassfish/webservices/connector/annotation/handlers/WebServiceHandler.java	2015-07-21 14:28:17.608821700 +1000
++++ 4.1_fixed/appserver/webservices/connector/src/main/java/org/glassfish/webservices/connector/annotation/handlers/WebServiceHandler.java	2015-07-21 12:49:20.822081000 +1000
+@@ -190,13 +190,43 @@
+             }*/
+ 
+             // let's see the type of web service we are dealing with...
+-            if ((ejbProvider!= null) && ejbProvider.getType("javax.ejb.Stateless")!=null &&(annCtx
+-                    instanceof EjbContext)) {
+-                // this is an ejb !
+-                EjbContext ctx = (EjbContext) annCtx;
+-                bundleDesc = ctx.getDescriptor().getEjbBundleDescriptor();
+-                bundleDesc.setSpecVersion("3.0");
+-            } else {
++            EjbContext ctx = null;
++            if ((ejbProvider!= null) && ejbProvider.getType("javax.ejb.Stateless")!=null) {
++                if (annCtx instanceof EjbContext) {
++                    // this is an ejb !
++                    ctx = (EjbContext) annCtx;
++                    bundleDesc = ctx.getDescriptor().getEjbBundleDescriptor();
++                    bundleDesc.setSpecVersion("3.0");
++                } else if (annCtx instanceof EjbsContext) {
++                    // https://java.net/jira/browse/GLASSFISH-20661
++                    // EJBs using the same class
++                    EjbsContext ctxs = (EjbsContext) annCtx;
++
++                    Stateless stateless = null;
++                    try {
++                        stateless = annElem.getAnnotation(javax.ejb.Stateless.class);
++                    } catch (Exception e) {
++                    }
++
++                    String name = null;
++                    if (stateless != null && (name = stateless.name()) != null) {
++                        if (name.length() == 0) {
++                            name = ((Class) annElem).getSimpleName();
++                        }
++                        for (EjbContext ejbCtx : ctxs.getEjbContexts()) {
++                            // Locate the EjbContext whose EjbDescriptor name matches the Stateless name attribute value
++                            if (name.equals(ejbCtx.getDescriptor().getName())) {
++                                ctx = ejbCtx;
++                                bundleDesc = ctx.getDescriptor().getEjbBundleDescriptor();
++                                bundleDesc.setSpecVersion("3.0");
++                                break;
++                            } 
++                        }
++                    }
++                }
++            }
++
++            if (ctx == null) {
+                 // this has to be a servlet since there is no @Servlet annotation yet
+                 if(annCtx instanceof WebComponentContext) {
+                     bundleDesc = ((WebComponentContext)annCtx).getDescriptor().getWebBundleDescriptor();
