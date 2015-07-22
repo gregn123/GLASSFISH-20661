@@ -20,17 +20,17 @@ I tracked down the problem to be related to the fact that when there are multipl
 The following Glassfish 4.1 Java class, which processes the "javax.jws.WebService" annotation, doesn't handle "EjbsContext" when it checks the type of web-service implementation (EJB/Servlet):
 
     4.1/appserver/webservices/connector/src/main/java/org/glassfish/webservices/connector/annotation/handlers/WebServiceHandler.java
-	
+    
 The code in this class's "processAnnotation(AnnotationInfo annInfo)" method has the following form:
 
             if ((ejbProvider!= null) && ejbProvider.getType("javax.ejb.Stateless")!=null && (annCtx instanceof EjbContext)) {
-				// this is an ejb !
-				...
-			else {
+                // this is an ejb !
+                ...
+            else {
                 // this has to be a servlet since there is no @Servlet annotation yet
-				...
-			}
-			
+                ...
+            }
+            
 So when an "EjbsContext" (as opposed to a "EjbContext") is passed as part of the "annInfo" parameter, we end up in the code block with comment "this has to be a servlet ...", which is INCORRECT.
 
 
@@ -42,10 +42,10 @@ As a convenience for testing this patch, I have provided the patched JAR file "w
 
 Summary of files:
 
-ws_ejb_ok.jar				- EJB-based web-service that deploys and works OK
-ws_ejb_ng.jar				- Same EJB-based web-service but with different <ejb-name> in ejb-jar.xml; deploys OK but no web-service endpoint is exposed
-WebServiceHandler.patch		- my proposed patch (to be reviewed by Oracle)
-webservices-connector.jar	- Glassfish 4.1 library JAR file which includes my patched class (org.glassfish.webservices.connector.annotation.handlers.WebServiceHandler.class)
-README.txt					- this README file
+ws_ejb_ok.jar               - EJB-based web-service that deploys and works OK
+ws_ejb_ng.jar               - Same EJB-based web-service but with different <ejb-name> in ejb-jar.xml; deploys OK but no web-service endpoint is exposed
+WebServiceHandler.patch     - my proposed patch (to be reviewed by Oracle)
+webservices-connector.jar   - Glassfish 4.1 library JAR file which includes my patched class (org.glassfish.webservices.connector.annotation.handlers.WebServiceHandler.class)
+README.txt                  - this README file
 
 
