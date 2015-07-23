@@ -42,10 +42,20 @@ As a convenience for testing this patch, I have provided the patched JAR file "w
 
 Summary of files:
 
-ws_ejb_ok.jar               - EJB-based web-service that deploys and works OK
-ws_ejb_ng.jar               - Same EJB-based web-service but with different <ejb-name> in ejb-jar.xml; deploys OK but no web-service endpoint is exposed
-WebServiceHandler.patch     - my proposed patch (to be reviewed by Oracle)
-webservices-connector.jar   - Glassfish 4.1 library JAR file which includes my patched class (org.glassfish.webservices.connector.annotation.handlers.WebServiceHandler.class)
 README.txt                  - this README file
+
+ws_ejb_ok.jar               - EJB-based web-service that deploys and works OK
+
+ws_ejb_ng.jar               - Same EJB-based web-service but with different <ejb-name> in ejb-jar.xml; deploys OK but no web-service endpoint is exposed
+
+app_src_code                - directory containing source code for ws_ejb_ok and ws_ejb_ng applications (Java source code also included in both ws_ejb JAR files)
+
+4.1                         - directory containing original Glassfish 4.1 source code file "WebServiceHandler.java"
+
+4.1_fixed                   - directory containing patched Glassfish 4.1 source code file "WebServiceHandler.java"
+
+WebServiceHandler.patch     - my proposed patch (to be reviewed by Oracle)
+
+webservices-connector.jar   - Glassfish 4.1 library JAR file which includes my patched class (org.glassfish.webservices.connector.annotation.handlers.WebServiceHandler.class)
 
 
