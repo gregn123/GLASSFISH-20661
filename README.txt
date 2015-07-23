@@ -1,5 +1,5 @@
 
-This issue still exists in Glassfish 4.1.
+This bug still exists in Glassfish 4.1.
 
 Scenario:
 
@@ -14,6 +14,63 @@ The expected message "EJB Endpoint deployed ws_ejb_ng listening at address at ht
 Effectively the web-service is disabled by defining another session bean in the ejb-jar.xml descriptor that has the same class but different ejb-name.
 
 
+Steps to reproduce the bug:
+
+1) Start server
+
+    asadmin start-domain
+	
+2) Deploy ws_ejb_ok.jar:
+
+    asadmin deploy ws_ejb_ok.jar
+	
+3) Check server.log (glassfish4/glassfish/domains/domain1/logs/server.log):
+
+You will see lines logged like the following:
+
+    [2015-07-23T11:52:41.390+1000] [glassfish 4.1] [INFO] [AS-EJB-00054] [javax.enterprise.ejb.container] [tid: _ThreadID=43 _ThreadName=admin-listener(1)] [timeMillis: 1437616361390] [levelValue: 800] [[
+      Portable JNDI names for EJB HelloEJBa: [java:global/ws_ejb_ok/HelloEJBa!endpoint.Hello, java:global/ws_ejb_ok/HelloEJBa]]]
+
+      ...
+	  
+    [2015-07-23T11:52:42.623+1000] [glassfish 4.1] [INFO] [AS-WSJSR109IMPL-00019] [javax.enterprise.webservices] [tid: _ThreadID=43 _ThreadName=admin-listener(1)] [timeMillis: 1437616362623] [levelValue: 800] [[
+      EJB Endpoint deployed ws_ejb_ok  listening at address at http://XXXXXXXX:8080/HelloEJBService/HelloEJB]]
+
+As a quick check that the web-service endpoint is available, the above endpoint listening address with "?wsdl" appended may be entered in a web-browser and the WSDL should be displayed.
+
+4) Undeploy ws_ejb_ok:
+
+    asadmin undeploy ws_ejb_ok
+	
+5) Deploy ws_ejb_ng.jar:
+
+    asadmin deploy ws_ejb_ng.jar
+	
+6) Check server.log
+
+You will see lines logged like the following:
+
+    [2015-07-23T12:10:02.039+1000] [glassfish 4.1] [INFO] [AS-EJB-00054] [javax.enterprise.ejb.container] [tid: _ThreadID=42 _ThreadName=admin-listener(1)] [timeMillis: 1437617402039] [levelValue: 800] [[
+      Portable JNDI names for EJB HelloEJBb: [java:global/ws_ejb_ng/HelloEJBb, java:global/ws_ejb_ng/HelloEJBb!endpoint.Hello]]]
+
+    [2015-07-23T12:10:02.101+1000] [glassfish 4.1] [INFO] [AS-EJB-00054] [javax.enterprise.ejb.container] [tid: _ThreadID=42 _ThreadName=admin-listener(1)] [timeMillis: 1437617402101] [levelValue: 800] [[
+      Portable JNDI names for EJB HelloEJBa: [java:global/ws_ejb_ng/HelloEJBa!endpoint.Hello, java:global/ws_ejb_ng/HelloEJBa]]]
+
+However (without my patch applied) you WILL NOT see any log message about the endpoint being deployed or any listening address for it. The endpoint is not available, and this is not correct (i.e. a bug).
+
+With my patch applied to Glassfish, a line of the following form will additionally get logged:
+
+    [2015-07-23T12:10:02.382+1000] [glassfish 4.1] [INFO] [AS-WSJSR109IMPL-00019] [javax.enterprise.webservices] [tid: _ThreadID=42 _ThreadName=admin-listener(1)] [timeMillis: 1437617402382] [levelValue: 800] [[
+      EJB Endpoint deployed ws_ejb_ng  listening at address at http://XXXXXXXX:8080/HelloEJBService/HelloEJB]]
+
+The endpoint can be given a quick test as described above, to check that is really is available.
+
+7) Undeploy ws_ejb_ng:
+
+    asadmin undeploy ws_ejb_ng
+
+
+	  	  
 Resolution:
 
 I tracked down the problem to be related to the fact that when there are multiple EJBs with the same class in the one module, their processing contexts are encapsulated in an "EjbsContext" rather than a single "EjbContext".
